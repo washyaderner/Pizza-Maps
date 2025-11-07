@@ -1,6 +1,6 @@
 // Local intelligence API (restaurants and attractions)
 import { NextRequest, NextResponse } from 'next/server';
-import { searchNearbyPlaces } from '@/lib/api-clients/google-maps';
+import { searchQualityRestaurants, searchNearbyPlaces } from '@/lib/api-clients/google-maps';
 import { getClimateData } from '@/lib/api-clients/open-meteo';
 
 export async function GET(request: NextRequest) {
@@ -17,9 +17,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get restaurants, attractions, and climate data
+    // Get quality restaurants, attractions, and climate data
     const [restaurants, attractions, climate] = await Promise.all([
-      searchNearbyPlaces(lat, lng, 'restaurant'),
+      searchQualityRestaurants(lat, lng),
       searchNearbyPlaces(lat, lng, 'tourist_attraction'),
       getClimateData(lat, lng),
     ]);

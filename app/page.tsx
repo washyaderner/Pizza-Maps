@@ -4,6 +4,8 @@ import { useState } from 'react';
 import SearchBar from './components/SearchBar';
 import PropertyCard from './components/PropertyCard';
 import MapEmbed from './components/MapEmbed';
+import RestaurantCard from './components/RestaurantCard';
+import SearchHistory from './components/SearchHistory';
 import LocalIntelligence from './components/LocalIntelligence';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
@@ -17,6 +19,7 @@ export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [attractions, setAttractions] = useState<Attraction[]>([]);
   const [climate, setClimate] = useState<ClimateData | null>(null);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   const handleSearch = async (query: string) => {
     setIsLoading(true);
@@ -40,10 +43,16 @@ export default function Home() {
       const addressData: Address = await addressResponse.json();
       setAddress(addressData);
 
+      // Add to search history (keep last 4, most recent first)
+      setSearchHistory(prev => {
+        const updated = [query, ...prev.filter(s => s !== query)].slice(0, 4);
+        return updated;
+      });
+
       // Step 2: Fetch property data and local intelligence in parallel
       const [propertyResponse, localResponse] = await Promise.all([
         fetch(
-          `/api/property?address=${encodeURIComponent(addressData.formatted)}&mock=true`
+          `/api/property?address=${encodeURIComponent(addressData.formatted)}`
         ),
         fetch(
           `/api/local?lat=${addressData.latitude}&lng=${addressData.longitude}`
@@ -92,6 +101,16 @@ export default function Home() {
           <div className="flex flex-col">
             <SearchBar onSearch={handleSearch} isLoading={isLoading} />
             
+            {/* Search History */}
+            <SearchHistory searches={searchHistory} onSelectSearch={handleSearch} />
+            
+            {/* Property Card */}
+            {!isLoading && !error && property && (
+              <div className="mt-4">
+                <PropertyCard property={property} />
+              </div>
+            )}
+            
             {/* Loading State */}
             {isLoading && <div className="mt-4"><LoadingSpinner /></div>}
 
@@ -99,7 +118,7 @@ export default function Home() {
             {error && !isLoading && <div className="mt-4"><ErrorMessage message={error} /></div>}
           </div>
 
-          {/* Right Column: Map Embed */}
+          {/* Right Column: Map Embed and Restaurants */}
           {!isLoading && !error && address && (
             <div className="flex flex-col">
               <MapEmbed
@@ -107,23 +126,19 @@ export default function Home() {
                 latitude={address.latitude}
                 longitude={address.longitude}
               />
+              {restaurants.length > 0 && (
+                <RestaurantCard restaurants={restaurants} />
+              )}
             </div>
           )}
         </div>
 
-        {/* Results - Property Card and Local Intelligence */}
+        {/* Results - Local Intelligence */}
         {!isLoading && !error && address && (
           <div className="space-y-6">
-            {/* Property Card */}
-            {property && (
-              <div className="mt-6">
-                <PropertyCard property={property} />
-              </div>
-            )}
-
             {/* Local Intelligence */}
             <LocalIntelligence
-              restaurants={restaurants}
+              restaurants={[]}
               attractions={attractions}
               climate={climate}
             />

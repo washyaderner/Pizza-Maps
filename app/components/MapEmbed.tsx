@@ -11,7 +11,7 @@ interface MapEmbedProps {
 export default function MapEmbed({ address, latitude, longitude }: MapEmbedProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(address)}&maptype=satellite&zoom=18`;
-  const openMapUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}&basemap=satellite`;
+  const openMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}&basemap=satellite`;
 
   return (
     <motion.div
@@ -34,7 +34,18 @@ export default function MapEmbed({ address, latitude, longitude }: MapEmbedProps
         </a>
       </div>
 
-      <div className="relative w-full h-[400px] rounded-lg overflow-hidden">
+      <a
+        href={openMapUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative w-full h-[400px] rounded-lg overflow-hidden block
+                 cursor-pointer group"
+      >
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white bg-black/70 px-4 py-2 rounded-lg text-sm font-medium">
+            Click to open in Google Maps
+          </div>
+        </div>
         <iframe
           src={embedUrl}
           width="100%"
@@ -43,9 +54,9 @@ export default function MapEmbed({ address, latitude, longitude }: MapEmbedProps
           allowFullScreen
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          className="w-full h-full"
+          className="w-full h-full pointer-events-none"
         />
-      </div>
+      </a>
     </motion.div>
   );
 }

@@ -28,6 +28,12 @@ export async function getPropertyData(address: string): Promise<PropertyData | n
 
     if (!response.ok) {
       if (response.status === 404) return null;
+      // Check for subscription/billing errors
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 401 && errorData.error?.includes('subscription')) {
+        console.warn('RentCast API subscription inactive - falling back to mock data');
+        return null; // Will trigger fallback to mock data
+      }
       throw new Error(`RentCast API error: ${response.status}`);
     }
 
@@ -37,17 +43,18 @@ export async function getPropertyData(address: string): Promise<PropertyData | n
 
     const property = data[0];
 
+    // Map RentCast API fields (check multiple possible field names)
     const propertyData: PropertyData = {
-      address: property.formattedAddress || address,
-      estimatedValue: property.price || property.assessedValue,
-      squareFeet: property.squareFootage,
-      bedrooms: property.bedrooms,
-      bathrooms: property.bathrooms,
-      yearBuilt: property.yearBuilt,
-      propertyType: property.propertyType,
-      lastSaleDate: property.lastSaleDate,
-      lastSalePrice: property.lastSalePrice,
-      lotSize: property.lotSize,
+      address: property.formattedAddress || property.address || address,
+      estimatedValue: property.price || property.estimatedValue || property.assessedValue || property.marketValue,
+      squareFeet: property.squareFootage || property.squareFeet || property.livingArea,
+      bedrooms: property.bedrooms || property.beds,
+      bathrooms: property.bathrooms || property.baths,
+      yearBuilt: property.yearBuilt || property.yearConstructed,
+      propertyType: property.propertyType || property.type,
+      lastSaleDate: property.lastSaleDate || property.saleDate,
+      lastSalePrice: property.lastSalePrice || property.salePrice,
+      lotSize: property.lotSize || property.lotSquareFeet,
       zoning: property.zoning,
     };
 
@@ -61,16 +68,19 @@ export async function getPropertyData(address: string): Promise<PropertyData | n
 
 // Alternative: Mock data generator for development/demo
 export function getMockPropertyData(address: string): PropertyData {
+  // Note: This is placeholder data. For real property data, activate RentCast API subscription.
+  // Mock data matches example property: 273 NW 182nd Ave, Beaverton, OR 97006
+  // Estimated value calculated at ~$378/sqft for Beaverton area (typical range $300-450/sqft)
   return {
     address,
-    estimatedValue: 425000,
-    squareFeet: 1850,
+    estimatedValue: 425000, // Estimated based on sqft and Beaverton market (~$378/sqft)
+    squareFeet: 1125,
     bedrooms: 3,
-    bathrooms: 2.5,
-    yearBuilt: 1998,
+    bathrooms: 2,
+    yearBuilt: 1998, // Typical for this area/type
     propertyType: 'Single Family',
-    lastSaleDate: '2019-03-15',
-    lastSalePrice: 380000,
-    lotSize: 7200,
+    lastSaleDate: '2019-03-15', // Example date
+    lastSalePrice: 380000, // Example sale price
+    lotSize: 7200, // Typical lot size for this area
   };
 }
