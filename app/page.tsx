@@ -86,29 +86,40 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Search Bar */}
-        <div className="mb-12">
-          <SearchBar onSearch={handleSearch} isLoading={isLoading} />
-        </div>
+        {/* Search Bar and Map Layout - Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+          {/* Left Column: Search Bar */}
+          <div className="flex flex-col">
+            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+            
+            {/* Loading State */}
+            {isLoading && <div className="mt-4"><LoadingSpinner /></div>}
 
-        {/* Loading State */}
-        {isLoading && <LoadingSpinner />}
+            {/* Error State */}
+            {error && !isLoading && <div className="mt-4"><ErrorMessage message={error} /></div>}
+          </div>
 
-        {/* Error State */}
-        {error && !isLoading && <ErrorMessage message={error} />}
-
-        {/* Results */}
-        {!isLoading && !error && address && (
-          <div className="space-y-6">
-            {/* Property and Map Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {property && <PropertyCard property={property} />}
+          {/* Right Column: Map Embed */}
+          {!isLoading && !error && address && (
+            <div className="flex flex-col">
               <MapEmbed
                 address={address.formatted}
                 latitude={address.latitude}
                 longitude={address.longitude}
               />
             </div>
+          )}
+        </div>
+
+        {/* Results - Property Card and Local Intelligence */}
+        {!isLoading && !error && address && (
+          <div className="space-y-6">
+            {/* Property Card */}
+            {property && (
+              <div className="mt-6">
+                <PropertyCard property={property} />
+              </div>
+            )}
 
             {/* Local Intelligence */}
             <LocalIntelligence

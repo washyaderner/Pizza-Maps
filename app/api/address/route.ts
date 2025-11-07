@@ -26,6 +26,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Address API error:', error);
+    // Pass through billing/configuration errors with their messages
+    if (error instanceof Error && (error.message.includes('billing') || error.message.includes('API'))) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 503 } // Service Unavailable for configuration issues
+      );
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

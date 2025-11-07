@@ -19,6 +19,17 @@ export async function geocodeAddress(address: string): Promise<Address | null> {
 
     const data = await response.json();
 
+    // Check for billing-related errors
+    if (data.status === 'REQUEST_DENIED') {
+      const errorMsg = data.error_message || '';
+      if (errorMsg.includes('billing') || errorMsg.includes('Billing')) {
+        console.error('Google Maps API billing error:', errorMsg);
+        throw new Error('Google Maps API billing is not enabled. Please enable billing in Google Cloud Console. Changes may take 5-10 minutes to propagate.');
+      }
+      console.error('Google Maps API request denied:', errorMsg);
+      throw new Error('API request denied. Please check your API key configuration.');
+    }
+
     if (data.status !== 'OK' || !data.results?.[0]) {
       return null;
     }
@@ -42,6 +53,10 @@ export async function geocodeAddress(address: string): Promise<Address | null> {
     return addressData;
   } catch (error) {
     console.error('Geocoding error:', error);
+    // Re-throw billing/configuration errors so they can be displayed to the user
+    if (error instanceof Error && (error.message.includes('billing') || error.message.includes('API'))) {
+      throw error;
+    }
     return null;
   }
 }

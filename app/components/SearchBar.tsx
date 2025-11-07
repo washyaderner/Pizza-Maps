@@ -24,7 +24,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       onSubmit={handleSubmit}
-      className="w-full max-w-3xl mx-auto"
+      className="w-full"
     >
       <div className="relative">
         <input
@@ -56,7 +56,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
         </button>
       </div>
 
-      <div className="mt-3 text-sm text-gray-400 text-center">
+      <div className="mt-3 text-sm text-gray-400 text-left">
         Example: 1600 Pennsylvania Avenue NW, Washington, DC
       </div>
     </motion.form>
